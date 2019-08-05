@@ -1,0 +1,11 @@
+[Unit]
+Description=The lamp server
+After=multi-user.target
+
+[Service]
+Type=idle
+WorkingDirectory=/var/www/leds
+ExecStart=/home/pi/.yarn/bin/yarn server/server > /home/pi/myscript.log
+
+[Install]
+WantedBy=multi-user.target

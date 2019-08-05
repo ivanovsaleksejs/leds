@@ -1,0 +1,102 @@
+{
+    "init": {
+        "device1": [
+            {
+                "zone_name": "zone1",
+                "animation_name": "solid",
+                "animation_data": {
+                    "color": [255,0,0],
+                    "speed":900,
+                    "zoneLength": 6,
+                    "stripLength": 60,
+                    "quot": "0.2"
+                }
+            },
+            {
+                "zone_name": "zone2",
+                "animation_name": "blink",
+                "animation_data": {
+                    "color": [128,255,0],
+                    "speed":900,
+                    "zoneLength": 6,
+                    "stripLength": 60,
+                    "quot": "0.2"
+                }
+            }
+        ],
+        "device2": [
+            {
+                "zone_name": "zone3",
+                "animation_name": "blink",
+                "animation_data": {
+                    "color": [0,255,0],
+                    "speed":900,
+                    "zoneLength": 6,
+                    "stripLength": 60,
+                    "quot": "0.2"
+                }
+            },
+            {
+                "zone_name": "zone4",
+                "animation_name": "solid",
+                "animation_data": {
+                    "color": [0,0,255],
+                    "speed":900,
+                    "zoneLength": 6,
+                    "stripLength": 60,
+                    "quot": "0.2"
+                }
+            }
+        ]
+    },
+    "end": {
+        "device1": [
+            {
+                "zone_name": "zone1",
+                "animation_name": "blink",
+                "animation_data": {
+                    "color": [255,0,64],
+                    "speed":900,
+                    "zoneLength": 6,
+                    "stripLength": 60,
+                    "quot": "0.2"
+                }
+            },
+            {
+                "zone_name": "zone2",
+                "animation_name": "solid",
+                "animation_data": {
+                    "color": [192,255,255],
+                    "speed":900,
+                    "zoneLength": 6,
+                    "stripLength": 60,
+                    "quot": "0.2"
+                }
+            }
+        ],
+        "device2": [
+            {
+                "zone_name": "zone3",
+                "animation_name": "blink",
+                "animation_data": {
+                    "color": [0,255,255],
+                    "speed":900,
+                    "zoneLength": 6,
+                    "stripLength": 60,
+                    "quot": "0.2"
+                }
+            },
+            {
+                "zone_name": "zone4",
+                "animation_name": "solid",
+                "animation_data": {
+                    "color": [255,128,0],
+                    "speed":900,
+                    "zoneLength": 6,
+                    "stripLength": 60,
+                    "quot": "0.2"
+                }
+            }
+        ]
+    }
+]

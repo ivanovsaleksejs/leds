@@ -1,0 +1,12 @@
+{
+  "buttons": [
+    {
+      "name": "init",
+      "title": "Start"
+    },
+    {
+      "name": "end",
+      "title": "Stop"
+    }
+  ]
+}
