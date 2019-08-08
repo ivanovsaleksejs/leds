@@ -1,4 +1,4 @@
-This project aims to control several ESP32 devices with LED strips connected to each via WiFi using Raspberry Pi as a controller.
+This project aims to control via WiFi several ESP32 devices with LED strips connected to each, using Raspberry Pi as a controller and host for node server and react based UI. .
 
 ## Installation
 
