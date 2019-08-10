@@ -1,7 +1,11 @@
 import time
 import gc
+import machine
+import neopixel
 
 import animations
+
+
 
 #
 # Returns time in ms
@@ -25,11 +29,34 @@ def sum_lengths(stripData, index):
 #
 # Thread that runs through animation data and updates np list
 #
-def redraw_thread(np, config, globals):
+def redraw_thread(config, globals):
+
+    # neopixel_write_compressed function treats buffer as elements containing color and length
+    # instead of bunch of colors
+    # It's very effective if you use one animation for many LEDs
+    # This function is available in custom build
+    # More info:
+    # https://github.com/ivanovsaleksejs/micropython/commit/460708f45bf9ced93bd76a989b599821185a68eb
+    if config["useCompressedOutput"]:
+        try:
+            from esp import neopixel_write_compressed as neopixel_write
+            globals.compressedOutput = True
+        except:
+            from esp import neopixel_write
+    else:
+        from esp import neopixel_write
+
+    if globals.compressedOutput:
+        enum = list(enumerate(globals.stripData))
+        bufferSize = len(enum)
+    else:
+        bufferSize = config["stripCount"] * config["stripLength"]
+
+    np = neopixel.NeoPixel(machine.Pin(config["pinLED"]), bufferSize, timing=1)
 
     while True:
         if globals.redraw_active:
-            redraw_cicle(np, config, globals)
+            redraw_cycle(np, config, globals, neopixel_write)
         else:
             gc.collect()
             time.sleep_ms(100)
@@ -40,16 +67,20 @@ def redraw_thread(np, config, globals):
 #
 # Function that cycles through strip data and redraws LEDs
 #
-def redraw_cicle(np, config, globals):
+def redraw_cycle(np, config, globals, neopixel_write):
 
     enum = list(enumerate(globals.stripData))
-
     # Align offsets of zones
     for index, strip in enum:
-        strip["animation_data"]["offset"] = sum_lengths(globals.stripData, index)
+        if globals.compressedOutput:
+            strip["animation_data"]["offset"] = index * 5
+        else:
+            strip["animation_data"]["offset"] = sum_lengths(globals.stripData, index)
         # Pass previous animation data (for transitions)
         if globals.previousData:
             strip["animation_data"]["previous"] = globals.previousData[index]["animation_data"]
+
+#    print(enum)
 
     msPerFrame = int(1000/config["frameRate"])
     frameCount = 0
@@ -63,18 +94,19 @@ def redraw_cicle(np, config, globals):
         #  Process animations
         for index, strip in enum:
             if strip["animation_name"] == "blink":
-                animations.blink(np, config, index, strip["animation_data"])
+                animations.blink(np, config, index, strip["animation_data"], globals.compressedOutput)
             if strip["animation_name"] == "blinkrng":
-                animations.blinkrng(np, config, index, strip["animation_data"])
+                animations.blinkrng(np, config, index, strip["animation_data"], globals.compressedOutput)
             if strip["animation_name"] == "blink_solid":
-                animations.blink(np, config, index, strip["animation_data"], True, False, True)
+                animations.blink(np, config, index, strip["animation_data"], globals.compressedOutput, True)
             if strip["animation_name"] == "blinkrng_solid":
-                animations.blinkrng(np, config, index, strip["animation_data"], True, False, True)
+                animations.blinkrng(np, config, index, strip["animation_data"], globals.compressedOutput, True)
             if strip["animation_name"] == "solid":
-                animations.solid(np, config, index, strip["animation_data"])
+                animations.solid(np, config, index, strip["animation_data"], globals.compressedOutput)
 
         # Send data to LEDs
-        np.write()
+#        print(np.buf)
+        neopixel_write(np.pin, np.buf, np.timing)
 
         # Calculate time spent for frame
         frameTime = time.ticks_diff(time.ticks_ms(), frameStart)

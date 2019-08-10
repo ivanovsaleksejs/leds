@@ -38,3 +38,4 @@ sequenceName = "process"
 dataFile = ""
 stripData = False
 previousData = False
+compressedOutput = False
