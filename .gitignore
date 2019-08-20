@@ -26,3 +26,4 @@ leds.service
 config.json
 stripData.json
 *.pyc
+*.bin
