@@ -12,5 +12,7 @@ def loadStripData(filename, globals):
 # Returns strip data for specific animation
 #
 def getStripData(deviceName, sequenceName, globals):
-    data = json.loads(globals.dataFile)
-    return data[sequenceName][deviceName]
+    obj = json.loads(globals.dataFile)
+    stripData = obj[sequenceName][deviceName]
+    del obj
+    return stripData

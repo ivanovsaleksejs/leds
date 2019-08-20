@@ -45,11 +45,11 @@ def transition(np, config, strip_number, animation_data, compressedOutput, solid
     animation_data["totalLength"] = animation_data["zoneLength"] * animation_data["stripLength"]
     if not "transition_frame"  in animation_data:
         color = animation_data["color"] if "faded" in animation_data else [0,0,0]
-            
+
         #lazy fix
         if "frames" in animation_data["previous"]:
             oldColor = animation_data["previous"]["frames"][animation_data["previous"]["position"]]
-            
+
         else:
             oldColor = [0] * 3
             oldColor[np.ORDER[0]] = animation_data["previous"]["color"][0]
@@ -117,6 +117,8 @@ def transition(np, config, strip_number, animation_data, compressedOutput, solid
                 animation_data["transition_position"] = 0
                 animation_data["faded"] = True
                 del animation_data["transition_frame"]
+    del color
+    gc.collect()
 
 
 def prepareBlink(np, config, strip_number, animation_data, compressedOutput, solid=False):
@@ -161,6 +163,14 @@ def prepareBlink(np, config, strip_number, animation_data, compressedOutput, sol
             animation_data["frames"].append(color)
 
     animation_data["quotient"] = True
+    del color
+    del startColor
+    del stopColor
+    del current_color
+    del frameCount
+    del animation_time
+    del quotient
+    gc.collect()
 
 
 #
@@ -212,11 +222,9 @@ def blink(np, config, strip_number, animation_data, compressedOutput, solid=Fals
         try:
             if compressedOutput:
                 intColor = animation_data["frames"][position]
-                color = struct.pack(">HBBB", animation_data["totalLength"], intColor[2], intColor[1], intColor[0])
-                np.buf[animation_data["offset"] : animation_data["offset"] + 5] = color
+                np.buf[animation_data["offset"] : animation_data["offset"] + 5] = struct.pack(">HBBB", animation_data["totalLength"], intColor[2], intColor[1], intColor[0])
             else:
-                color = bytearray(animation_data["frames"][position] * animation_data["totalLength"])
-                np.buf[animation_data["offset"] * np.bpp : (animation_data["offset"] + animation_data["totalLength"]) * np.bpp] = color
+                np.buf[animation_data["offset"] * np.bpp : (animation_data["offset"] + animation_data["totalLength"]) * np.bpp] = bytearray(animation_data["frames"][position] * animation_data["totalLength"])
         except MemoryError:
             gc.collect()
             continue
@@ -228,6 +236,11 @@ def blink(np, config, strip_number, animation_data, compressedOutput, solid=Fals
         position += 1
 
     animation_data["position"] = position
+
+
+    del direction
+    del position
+    del intColor
 
     gc.collect()
 

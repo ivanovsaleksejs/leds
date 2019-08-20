@@ -54,6 +54,7 @@ def redraw_thread(config, globals):
 
     np = neopixel.NeoPixel(machine.Pin(config["pinLED"]), bufferSize, timing=1)
 
+
     while True:
         if globals.redraw_active:
             redraw_cycle(np, config, globals, neopixel_write)
@@ -61,6 +62,7 @@ def redraw_thread(config, globals):
             gc.collect()
             time.sleep_ms(100)
         if globals.reset:
+            gc.collect()
             globals.reset = False
             globals.redraw_active = True
 
@@ -79,8 +81,6 @@ def redraw_cycle(np, config, globals, neopixel_write):
         # Pass previous animation data (for transitions)
         if globals.previousData:
             strip["animation_data"]["previous"] = globals.previousData[index]["animation_data"]
-
-#    print(enum)
 
     msPerFrame = int(1000/config["frameRate"])
     frameCount = 0
@@ -104,8 +104,9 @@ def redraw_cycle(np, config, globals, neopixel_write):
             if strip["animation_name"] == "solid":
                 animations.solid(np, config, index, strip["animation_data"], globals.compressedOutput)
 
+        del index, strip
+
         # Send data to LEDs
-#        print(np.buf)
         neopixel_write(np.pin, np.buf, np.timing)
 
         # Calculate time spent for frame
@@ -113,3 +114,6 @@ def redraw_cycle(np, config, globals, neopixel_write):
 
         if frameTime <= msPerFrame:
             time.sleep_ms(msPerFrame - frameTime)
+
+    del enum
+    gc.collect()

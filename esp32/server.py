@@ -35,9 +35,6 @@ def connect(secrets, config, globals):
 
     globals.controllerIP = getControllerIP(config["controllerHostname"], globals.net)
 
-    print(globals.net.ifconfig())
-    print(globals.controllerIP)
-
     registerDevice(globals.controllerIP, config, globals.net.ifconfig()[0])
 
 def getControllerIP(hostname, net):
@@ -72,10 +69,6 @@ def registerDevice(ip, config, thisIP):
             txt = r.text
             break
 
-    print(txt)
-
-
-
 # Parse GET parameters
 def qs_parse(qs):
 
@@ -108,18 +101,17 @@ def get(path):
 
 def server(config, globals):
 
-    s = False
+    addr = socket.getaddrinfo(globals.net.ifconfig()[0], 80)[0][-1]
+    s = socket.socket()
+    s.bind(addr)
+    s.listen(1)
+    s.settimeout(None)
     while True:
-        if not s:
-            addr = socket.getaddrinfo(globals.net.ifconfig()[0], 80)[0][-1]
-            s = socket.socket()
-            s.bind(addr)
-            s.listen(1)
-            s.settimeout(None)
 
+        gc.collect()
         try:
-            conn,addr=s.accept()
-            request=conn.recv(4096)
+            conn,_=s.accept()
+            request=conn.recv(512)
 
             request = re.compile('\r?\n').split(request.decode('utf-8'))
             method,path,protocol = request[0].split()
@@ -130,10 +122,13 @@ def server(config, globals):
 
             if parseGet["cmd"] == "get" and parseGet["route"][0] in routes:
                 response = routes[parseGet["route"][0]](parseGet["params"], globals, config)
-            print("ok")
+            del request
+            del parseGet
+            gc.collect()
 
         except:
-            print("fail")
+            gc.collect()
+            s.listen(1)
             continue
 
         try:
@@ -141,8 +136,12 @@ def server(config, globals):
             conn.send('Content-Type: text/html\n')
             conn.send('Connection: close\n\n')
             conn.sendall(response)
+            conn.close()
+            del response
+            gc.collect()
         except:
-            print("fail2")
             gc.collect()
 
         conn.close()
+        del conn
+        gc.collect()
