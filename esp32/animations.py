@@ -240,7 +240,7 @@ def blink(np, config, strip_number, animation_data, compressedOutput, solid=Fals
                                 animation_data["flickerCompleted"] = True
                             else:
                                 animation_data["flickerStrip"] = random.choice(leftStrips)
-                                animation_data["flickerPhases"] = [(random.randint(2,13), random.randint(1,3)) for _ in range(0, random.randint(3, 9))]
+                                animation_data["flickerPhases"] = [(random.choice([k for k in range(1,5)] + [k for k in range(1,7)] + [k for k in range(1,13)]), random.randint(1,3)) for _ in range(0, random.randint(3, 9))]
                                 animation_data["flickerPhase"] = 0
                                 animation_data["flickerToggle"] = 0
                                 animation_data["flickerStep"] = 0
