@@ -1,5 +1,5 @@
 import math
-import random
+import urandom as random
 import gc
 import time
 import struct
@@ -222,7 +222,52 @@ def blink(np, config, strip_number, animation_data, compressedOutput, solid=Fals
         try:
             if compressedOutput:
                 intColor = animation_data["frames"][position]
-                np.buf[animation_data["offset"] : animation_data["offset"] + 5] = struct.pack(">HBBB", animation_data["totalLength"], intColor[2], intColor[1], intColor[0])
+                if "flickerTransition" in animation_data and animation_data["flickerTransition"]:
+                    if "flickerCompleted" in animation_data:
+                        intColor = animation_data["flickerColor"]
+                        np.buf[animation_data["offset"] : animation_data["offset"] + 5] = struct.pack(">HBBB", animation_data["totalLength"], intColor[2], intColor[1], intColor[0])
+                    else:
+                        if "flickerPhaseCompleted" in animation_data and animation_data["flickerPhaseCompleted"] or not "flickerPhaseCompleted" in animation_data:
+                            animation_data["flickerPhaseCompleted"] = False
+                            if not "flickered" in animation_data:
+                                animation_data["flickered"] = []
+                            if "flickerStrip" in animation_data:
+                                animation_data["flickered"].append(animation_data["flickerStrip"])
+                                del animation_data["flickerStrip"]
+                            strips = range(0, animation_data["zoneLength"])
+                            leftStrips = [k for k in strips if k not in animation_data["flickered"]]
+                            if leftStrips == []:
+                                animation_data["flickerCompleted"] = True
+                            else:
+                                animation_data["flickerStrip"] = random.choice(leftStrips)
+                                animation_data["flickerPhases"] = [(random.randint(2,13), random.randint(1,3)) for _ in range(0, random.randint(3, 9))]
+                                animation_data["flickerPhase"] = 0
+                                animation_data["flickerToggle"] = 0
+                                animation_data["flickerStep"] = 0
+                        else:
+                            animation_data["flickerStep"] += 1
+                            if animation_data["flickerStep"] > animation_data["flickerPhases"][animation_data["flickerPhase"]][animation_data["flickerToggle"]]:
+                                animation_data["flickerStep"] = 0
+                                animation_data["flickerToggle"] += 1
+                                if animation_data["flickerToggle"] > 1:
+                                    animation_data["flickerToggle"] = 0
+                                    animation_data["flickerPhase"] += 1
+                                    if animation_data["flickerPhase"] >= len(animation_data["flickerPhases"]):
+                                        animation_data["flickerPhaseCompleted"] = True
+
+                        for strip in range(0, animation_data["zoneLength"]):
+                            if strip in animation_data["flickered"]:
+                                colorTo = animation_data["flickerColor"]
+                            elif strip == animation_data["flickerStrip"]:
+                                colorTo = animation_data["flickerColor"] if animation_data["flickerToggle"] == 1 else [0, 0, 0]
+                            else:
+                                colorTo = intColor
+                            # TODO: Fix offfset
+                            np.buf[animation_data["offset"] + (strip * 5) : animation_data["offset"] + (strip * 5) + 5] = struct.pack(">HBBB", animation_data["stripLength"], colorTo[2], colorTo[1], colorTo[0])
+
+
+                else:
+                    np.buf[animation_data["offset"] : animation_data["offset"] + 5] = struct.pack(">HBBB", animation_data["totalLength"], intColor[2], intColor[1], intColor[0])
             else:
                 np.buf[animation_data["offset"] * np.bpp : (animation_data["offset"] + animation_data["totalLength"]) * np.bpp] = bytearray(animation_data["frames"][position] * animation_data["totalLength"])
         except MemoryError:

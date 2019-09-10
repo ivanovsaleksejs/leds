@@ -76,6 +76,12 @@ def redraw_cycle(np, config, globals, neopixel_write):
     for index, strip in enum:
         if globals.compressedOutput:
             strip["animation_data"]["offset"] = index * 5
+            if index > 0:
+                strip["animation_data"]["offset"] = globals.stripData[index-1]["animation_data"]["zoneEnd"]
+            if "flickerTransition" in strip["animation_data"]:
+                strip["animation_data"]["zoneEnd"] = strip["animation_data"]["offset"] + 5 * strip["animation_data"]["zoneLength"]
+            else:
+                strip["animation_data"]["zoneEnd"] = strip["animation_data"]["offset"] + 5
         else:
             strip["animation_data"]["offset"] = sum_lengths(globals.stripData, index)
         # Pass previous animation data (for transitions)
