@@ -1,4 +1,4 @@
-This project aims to control via WiFi several ESP32 devices with LED strips connected to each, using Raspberry Pi as a controller and host for node server and react based UI. It can switch LED strips on and off, change animations etc, all from your phone or PC.
+This project aims to control via WiFi several ESP32 devices with LED strips connected to each, using Raspberry Pi as a controller and host for node server and react based UI. It can switch LED strips on and off, change animations etc, all from your phone or PC or remote controller.
 
 ## Installation
 
@@ -38,6 +38,8 @@ Install nginx and redis on your RPi. You can use other web server software if yo
         rewrite ^/backend/(.*) /$1 break;
         proxy_pass http://$server_addr:8081;
     }
+
+Install build-essential and libudev-dev necessary for usb lib: `apt-get install build-essential libudev-dev`. This will allow you to use usb based remote controller.
 
 Install node and yarn. Run
 
