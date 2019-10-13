@@ -7,10 +7,12 @@
     "fetch": "^1.1.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
+    "react-redux": "^7.1.0",
     "react-scripts": "3.0.1",
     "redis": "^2.8.0",
     "request": "^2.88.0",
-    "socket.io": "^2.2.0"
+    "socket.io": "^2.2.0",
+    "usb": "^1.6.0"
   },
   "scripts": {
     "start": "react-scripts start",
