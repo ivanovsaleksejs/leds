@@ -91,36 +91,9 @@
     ]
   },
   "end": {
-    "device1": [
-      {
-        "zone_name": "zone1",
-        "zoneLength": 6,
-        "stripLength": 60,
-        "animations": [
-          {
-            "animation_name": "blink",
-            "animation_data": {
-              "color": [255,0,64],
-              "speed":900,
-              "quot": "0.2"
-            }
-          }
-        ]
-      },
-      {
-        "zone_name": "zone2",
-        "zoneLength": 6,
-        "stripLength": 60,
-        "animations": [
-          {
-            "animation_name": "solid",
-            "animation_data": {
-              "color": [192,255,255]
-            }
-          }
-        ]
-      }
-    ],
+    "device1": {
+      "copy_data": "init"
+    },
     "device2": [
       {
         "zone_name": "zone3",
