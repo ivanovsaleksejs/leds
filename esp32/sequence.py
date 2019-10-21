@@ -14,5 +14,8 @@ def loadStripData(filename, globals):
 def getStripData(deviceName, sequenceName, globals):
     obj = json.loads(globals.dataFile)
     stripData = obj[sequenceName][deviceName]
+    if "copy_data" in stripData:
+        sequenceName = stripData["copy_data"]
+        stripData = obj[sequenceName][deviceName]
     del obj
     return stripData

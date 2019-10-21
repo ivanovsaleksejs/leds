@@ -12,8 +12,8 @@ const remoteButtons = {
     135: "OFF"
   },
   "commands": {
-    6: "light",
-    5: "light_run"
+    5: "light",
+    6: "light_run"
   }
 }
 

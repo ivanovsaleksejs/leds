@@ -84,9 +84,10 @@ def redraw_cycle(np, config, globals, neopixel_write):
                 strip["animation_data"]["zoneEnd"] = strip["animation_data"]["offset"] + 5
         else:
             strip["animation_data"]["offset"] = sum_lengths(globals.stripData, index)
+
         # Pass previous animation data (for transitions)
         if globals.previousData:
-            strip["animation_data"]["previous"] = globals.previousData[index]["animation_data"]
+            strip["animation_data"]["previous"] = globals.previousData[index]["animation_data"]["animations"][globals.previousData[index]["animation_data"]["animation_index"]]
 
     msPerFrame = int(1000/config["frameRate"])
     frameCount = 0
@@ -97,18 +98,34 @@ def redraw_cycle(np, config, globals, neopixel_write):
         # Frame start time
         frameStart = time.ticks_ms()
 
+        np.currentOffset = 0
         #  Process animations
         for index, strip in enum:
-            if strip["animation_name"] == "blink":
+            if not "animation_index" in strip["animation_data"]:
+                strip["animation_data"]["animation_index"] = 0
+            if "done" in strip["animation_data"] and strip["animation_data"]["done"] == True:
+                strip["animation_data"]["done"] = False
+                if strip["animation_data"]["animation_index"] < len(strip["animation_data"]["animations"]):
+                    #strip["animation_data"]["previous"] = strip["animation_data"]["animations"][strip["animation_data"]["animation_index"]]
+                    strip["animation_data"]["animations"][strip["animation_data"]["animation_index"]] = False
+                    strip["animation_data"]["animation_index"] += 1
+
+            animation = strip["animation_data"]["animations"][strip["animation_data"]["animation_index"]]
+
+            if animation["animation_name"] == "flicker":
+                animations.flicker(np, config, index, strip["animation_data"], globals.compressedOutput)
+            if animation["animation_name"] == "blink":
                 animations.blink(np, config, index, strip["animation_data"], globals.compressedOutput)
-            if strip["animation_name"] == "blinkrng":
+            if animation["animation_name"] == "blinkrng":
                 animations.blinkrng(np, config, index, strip["animation_data"], globals.compressedOutput)
-            if strip["animation_name"] == "blink_solid":
+            if animation["animation_name"] == "blink_solid":
                 animations.blink(np, config, index, strip["animation_data"], globals.compressedOutput, True)
-            if strip["animation_name"] == "blinkrng_solid":
+            if animation["animation_name"] == "blinkrng_solid":
                 animations.blinkrng(np, config, index, strip["animation_data"], globals.compressedOutput, True)
-            if strip["animation_name"] == "solid":
+            if animation["animation_name"] == "solid":
                 animations.solid(np, config, index, strip["animation_data"], globals.compressedOutput)
+
+            del animation
 
         del index, strip
 
