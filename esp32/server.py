@@ -12,9 +12,25 @@ from routes import routes
 
 def lookup_network(net, networks):
     ssid = bytearray(net["ssid"])
+    found = []
     for n in networks:
         if n[0] == ssid:
-            return net
+            found.append(n)
+    return found
+
+def attempt_connect(s, found, globals):
+    for name in found:
+        retries = 0
+        globals.net.connect(s["ssid"], s["password"], bssid=name[1])
+        while not globals.net.isconnected():
+            retries += 1
+            time.sleep_ms(200)
+            if retries >= 10:
+                break
+        print("done")
+        if globals.net.isconnected():
+            print(name)
+            return True
     return False
 
 # Connect to wifi
@@ -26,11 +42,9 @@ def connect(secrets, config, globals):
         globals.net.active(True)
         networks = globals.net.scan()
         for s in secrets["networks"]:
-            name = lookup_network(s, networks)
-            if name != False:
-                globals.net.connect(name["ssid"], name["password"])
-                while not globals.net.isconnected():
-                    pass
+            found = lookup_network(s, networks)
+            print(found)
+            if attempt_connect(s, found, globals):
                 break
 
     globals.controllerIP = getControllerIP(config["controllerHostname"], globals.net)
