@@ -110,6 +110,8 @@ def redraw_cycle(np, config, globals, neopixel_write):
                     strip["animation_data"]["animations"][strip["animation_data"]["animation_index"]] = False
                     strip["animation_data"]["animation_index"] += 1
 
+
+
             animation = strip["animation_data"]["animations"][strip["animation_data"]["animation_index"]]
 
             if animation["animation_name"] == "flicker":

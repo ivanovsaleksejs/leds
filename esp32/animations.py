@@ -123,7 +123,7 @@ def transition(np, config, strip_number, strip_data, compressedOutput, solid=Fal
     animation_data = strip_data["animations"][strip_data["animation_index"]]["animation_data"]
 
     if not "transition_frame"  in animation_data:
-        color = animation_data["color"] if "faded" in animation_data else [0,0,0]
+        color = animation_data["color"] if "faded" in animation_data or ("fade_to_black" in animation_data and animation_data["fade_to_black"] == False) else [0,0,0]
 
         prev = strip_data["previous"]["animation_data"]
         #lazy fix
@@ -136,10 +136,10 @@ def transition(np, config, strip_number, strip_data, compressedOutput, solid=Fal
             oldColor[np.ORDER[1]] = prev["color"][1]
             oldColor[np.ORDER[2]] = prev["color"][2]
 
-        if "faded" in animation_data:
-            oldColor = [0,0,0]
+        if "faded" in animation_data or ("fade_to_black" in animation_data and animation_data["fade_to_black"] == False):
+            oldColor = [0,0,0] if not "fade_to_black" in animation_data or animation_data["fade_to_black"] else oldColor
             #TODO: instead of sleep, need to skip frames
-            time.sleep_ms(animation_data["transitionOffTime"])
+            #time.sleep_ms(animation_data["transitionOffTime"])
 
             fixColor = [0] * 3
             fixColor[np.ORDER[0]] = color[0]
@@ -341,18 +341,33 @@ def blink(np, config, strip_number, strip_data, compressedOutput, solid=False):
 # Blink with random colors
 #
 
-def blinkrng(np, config, strip_number, animation_data, compressedOutput, solid=False):
+def blinkrng(np, config, strip_number, strip_data, compressedOutput, solid=False):
 
+
+    animation_data = strip_data["animations"][strip_data["animation_index"]]["animation_data"]
     if not "fullCycle" in animation_data:
         animation_data["fullCycle"] = 0
 
-    if animation_data["fullCycle"] >= 10:
+    if animation_data["fullCycle"] >= 3 or not "color" in animation_data:
+        if "quotient" in animation_data:
+            del animation_data["quotient"]
+        strip_data["previous"] = strip_data["animations"][strip_data["animation_index"]]
+        if "transitDone" in animation_data:
+            del animation_data["transitDone"]
+        if "transition_frame" in animation_data:
+            del animation_data["transition_frame"]
+        if "transition_frames_count" in animation_data:
+            del animation_data["transition_frames_count"]
+        if "transition_position" in animation_data:
+            del animation_data["transition_position"]
         color = (0, 0, 0)
-        while max(color) < 252:
-            color = (random.randint(0,4) * 63, random.randint(0,4) * 63, random.randint(0,4) * 63)
-        animation_data["speed"] = animation_data["speed"] if solid else random.randint(9, 36) * 200
+        animation_data["fullCycle"] = 0
+        while max(color) <= 127:
+            color = (random.randint(0,8) * 31, random.randint(0,8) * 31, random.randint(0,8) * 31)
         animation_data["color"] = color
 
         animation_data["quotient"] = False
+        animation_data["faded"] = True
+        animation_data["fade_to_black"] = False
 
-    blink(np, config, strip_number, animation_data, compressedOutput, solid=solid)
+    blink(np, config, strip_number, strip_data, compressedOutput, solid=solid)
