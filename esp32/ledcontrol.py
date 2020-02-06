@@ -46,9 +46,10 @@ def redraw_thread(config, globals):
     else:
         from esp import neopixel_write
 
+    enum = list(enumerate(globals.stripData))
+
     if globals.compressedOutput:
-        enum = list(enumerate(globals.stripData))
-        bufferSize = len(enum)
+       bufferSize = len(globals.stripData)
     else:
         bufferSize = config["stripCount"] * config["stripLength"]
 
@@ -72,8 +73,25 @@ def redraw_thread(config, globals):
 def redraw_cycle(np, config, globals, neopixel_write):
 
     enum = list(enumerate(globals.stripData))
-    # Align offsets of zones
+
     for index, strip in enum:
+        if "replicate" in strip["animation_data"]:
+            if not "replicate_done" in strip["animation_data"]:
+                strip["animation_data"]["replicate_done"] = True
+                replicateCount = strip["animation_data"]["replicate"]
+                for i in range(1, replicateCount):
+                    copy = strip.copy()
+                    copy["animation_data"] = strip["animation_data"].copy()
+                    copy["animation_data"]["animations"] = []
+                    for animation in strip["animation_data"]["animations"]:
+                        copy["animation_data"]["animations"].append(animation.copy())
+                    globals.stripData.insert(index+i, copy)
+ 
+    enum = list(enumerate(globals.stripData))
+    # Align offsets of zones
+
+    for index, strip in enum:
+
         if globals.compressedOutput:
             strip["animation_data"]["offset"] = index * 5
             if index > 0:
@@ -86,7 +104,7 @@ def redraw_cycle(np, config, globals, neopixel_write):
             strip["animation_data"]["offset"] = sum_lengths(globals.stripData, index)
 
         # Pass previous animation data (for transitions)
-        if globals.previousData:
+        if globals.previousData and index in globals.previousData:
             strip["animation_data"]["previous"] = globals.previousData[index]["animation_data"]["animations"][globals.previousData[index]["animation_data"]["animation_index"]]
 
     msPerFrame = int(1000/config["frameRate"])
@@ -104,8 +122,10 @@ def redraw_cycle(np, config, globals, neopixel_write):
             if not "animation_index" in strip["animation_data"]:
                 strip["animation_data"]["animation_index"] = 0
             if "done" in strip["animation_data"] and strip["animation_data"]["done"] == True:
+                if "drawn" in strip["animation_data"] and strip["animation_data"]["drawn"] == True:
+                    strip["animation_data"]["drawn"] = False
                 strip["animation_data"]["done"] = False
-                if strip["animation_data"]["animation_index"] < len(strip["animation_data"]["animations"]):
+                if strip["animation_data"]["animation_index"] < len(strip["animation_data"]["animations"])-1:
                     #strip["animation_data"]["previous"] = strip["animation_data"]["animations"][strip["animation_data"]["animation_index"]]
                     strip["animation_data"]["animations"][strip["animation_data"]["animation_index"]] = False
                     strip["animation_data"]["animation_index"] += 1
@@ -119,13 +139,13 @@ def redraw_cycle(np, config, globals, neopixel_write):
             if animation["animation_name"] == "blink":
                 animations.blink(np, config, index, strip["animation_data"], globals.compressedOutput)
             if animation["animation_name"] == "blinkrng":
-                animations.blinkrng(np, config, index, strip["animation_data"], globals.compressedOutput)
+                animations.blinkrng(np, config, index, globals.stripData[index]["animation_data"], globals.compressedOutput)
             if animation["animation_name"] == "blink_solid":
                 animations.blink(np, config, index, strip["animation_data"], globals.compressedOutput, True)
             if animation["animation_name"] == "blinkrng_solid":
                 animations.blinkrng(np, config, index, strip["animation_data"], globals.compressedOutput, True)
             if animation["animation_name"] == "solid":
-                animations.solid(np, config, index, strip["animation_data"], globals.compressedOutput)
+                animations.solid_color(np, config, index, strip["animation_data"], globals.compressedOutput)
 
             del animation
 

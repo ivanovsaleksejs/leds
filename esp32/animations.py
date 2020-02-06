@@ -12,10 +12,10 @@ import struct
 #
 # Solid color function
 #
-def solid(np, config, strip_number, strip_data, compressedOutput):
+def solid_color(np, config, strip_number, strip_data, compressedOutput):
 
     animation_data = strip_data["animations"][strip_data["animation_index"]]["animation_data"]
-    if not "drawn" in animation_data or not animation_data["drawn"]:
+    if not "drawn" in animation_data or animation_data["drawn"] == False:
         strip_data["totalLength"] = strip_data["zoneLength"] * strip_data["stripLength"]
         current_color = animation_data["color"]
 
@@ -44,6 +44,7 @@ def solid(np, config, strip_number, strip_data, compressedOutput):
     if "time" in animation_data and "drawTime" in animation_data:
         if time.ticks_ms() - animation_data["drawTime"] >= animation_data["time"]:
             strip_data["done"] =  True
+            animation_data["drawn"] =  False
 
 
 def flicker(np, config, strip_number, strip_data, compressedOutput, solid=False):
@@ -251,14 +252,15 @@ def prepareBlink(np, config, strip_number, strip_data, compressedOutput, solid=F
 
             animation_data["frames"].append(color)
 
+        del startColor
+        del stopColor
+        del quotient
+
     animation_data["quotient"] = True
     del color
-    del startColor
-    del stopColor
     del current_color
     del frameCount
     del animation_time
-    del quotient
     gc.collect()
 
 
@@ -343,12 +345,11 @@ def blink(np, config, strip_number, strip_data, compressedOutput, solid=False):
 
 def blinkrng(np, config, strip_number, strip_data, compressedOutput, solid=False):
 
-
     animation_data = strip_data["animations"][strip_data["animation_index"]]["animation_data"]
     if not "fullCycle" in animation_data:
         animation_data["fullCycle"] = 0
 
-    if animation_data["fullCycle"] >= 3 or not "color" in animation_data:
+    if not "drawn" in animation_data or animation_data["drawn"] == False:
         if "quotient" in animation_data:
             del animation_data["quotient"]
         strip_data["previous"] = strip_data["animations"][strip_data["animation_index"]]
@@ -362,12 +363,18 @@ def blinkrng(np, config, strip_number, strip_data, compressedOutput, solid=False
             del animation_data["transition_position"]
         color = (0, 0, 0)
         animation_data["fullCycle"] = 0
-        while max(color) <= 127:
-            color = (random.randint(0,8) * 31, random.randint(0,8) * 31, random.randint(0,8) * 31)
+
+        color = [random.randint(0,8) * 8, random.randint(0,8) * 8, random.randint(0,8) * 8]
+        color[random.randint(0,2)] = random.randint(1,2) * 127
+        color = tuple(color)
+
         animation_data["color"] = color
 
         animation_data["quotient"] = False
         animation_data["faded"] = True
         animation_data["fade_to_black"] = False
 
-    blink(np, config, strip_number, strip_data, compressedOutput, solid=solid)
+    if solid:
+        solid_color(np, config, strip_number, strip_data, compressedOutput)
+    else:
+        blink(np, config, strip_number, strip_data, compressedOutput, solid=solid)
