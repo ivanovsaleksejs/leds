@@ -33,7 +33,9 @@ def solid_color(np, config, strip_number, strip_data, compressedOutput):
                     color = bytearray(color * strip_data["totalLength"])
                     np.buf[strip_data["offset"] * np.bpp : (strip_data["offset"] + strip_data["totalLength"]) * np.bpp] = color
                 animation_data["drawn"] = True
-                if "time" in animation_data:
+                if "time" in animation_data and not "frame" in animation_data:
+                    animation_data["totalFrames"] = animation_data["time"] / config["frameRate"]
+                    animation_data["frame"] = 0
                     animation_data["drawTime"] = time.ticks_ms()
             except MemoryError:
                 gc.collect()
@@ -41,8 +43,13 @@ def solid_color(np, config, strip_number, strip_data, compressedOutput):
             break
     if compressedOutput:
         np.currentOffset += 5
-    if "time" in animation_data and "drawTime" in animation_data:
-        if time.ticks_ms() - animation_data["drawTime"] >= animation_data["time"]:
+        if "frame" in animation_data:
+            animation_data["frame"] += 1
+    if "time" in animation_data and "totalFrames" in animation_data:
+        if animation_data["frame"] >= animation_data["totalFrames"]: 
+            del animation_data["frame"]
+            del animation_data["totalFrames"]
+        #if time.ticks_ms() - animation_data["drawTime"] >= animation_data["time"]:
             strip_data["done"] =  True
             animation_data["drawn"] =  False
 
@@ -366,6 +373,61 @@ def blinkrng(np, config, strip_number, strip_data, compressedOutput, solid=False
 
         color = [random.randint(0,8) * 8, random.randint(0,8) * 8, random.randint(0,8) * 8]
         color[random.randint(0,2)] = random.randint(1,2) * 127
+        color = tuple(color)
+
+        animation_data["color"] = color
+
+        animation_data["quotient"] = False
+        animation_data["faded"] = True
+        animation_data["fade_to_black"] = False
+
+    if solid:
+        solid_color(np, config, strip_number, strip_data, compressedOutput)
+    else:
+        blink(np, config, strip_number, strip_data, compressedOutput, solid=solid)
+
+
+def onoff(np, config, strip_number, strip_data, compressedOutput, solid=False):
+
+    animation_data = strip_data["animations"][strip_data["animation_index"]]["animation_data"]
+    if not "fullCycle" in animation_data:
+        animation_data["fullCycle"] = 0
+
+    if not "drawn" in animation_data \
+        or animation_data["drawn"] == False \
+        or ("flicker" in animation_data \
+            and animation_data["flicker"] == 1 \
+            and "flickerActive" in animation_data \
+        ):
+        if "quotient" in animation_data:
+            del animation_data["quotient"]
+        strip_data["previous"] = strip_data["animations"][strip_data["animation_index"]]
+        if "transitDone" in animation_data:
+            del animation_data["transitDone"]
+        if "transition_frame" in animation_data:
+            del animation_data["transition_frame"]
+        if "transition_frames_count" in animation_data:
+            del animation_data["transition_frames_count"]
+        if "transition_position" in animation_data:
+            del animation_data["transition_position"]
+        color = (0, 0, 0)
+        animation_data["fullCycle"] = 0
+
+        onoff = (1 - animation_data["onoff"]) if "onoff" in animation_data else 1
+        animation_data["onoff"] = onoff
+        if "flicker" in animation_data and not "flickerActive" in animation_data and (not "randomize" in animation_data or animation_data["randomize"] == 0 or random.randint(0,1) == 1):
+            animation_data["flickerActive"] = random.randint(1,6)*2+1
+        if onoff == 1 and "randomize" in animation_data and animation_data["randomize"] == 1 and not "flickerActive" in animation_data:
+            onoff = random.randint(0,1)
+        if "flickerActive" in animation_data and animation_data["flickerActive"] > 0:
+            animation_data["drawn"] = False
+            animation_data["flickerActive"] -= 1
+            if animation_data["flickerActive"] == 0:
+                onoff = 1
+                del animation_data["flickerActive"]
+
+        color = [onoff * animation_data["originalColor"][0], onoff * animation_data["originalColor"][1], onoff * animation_data["originalColor"][2]]
+        #color[random.randint(0,2)] = random.randint(1,2) * 127
         color = tuple(color)
 
         animation_data["color"] = color

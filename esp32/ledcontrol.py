@@ -144,6 +144,8 @@ def redraw_cycle(np, config, globals, neopixel_write):
                 animations.blink(np, config, index, strip["animation_data"], globals.compressedOutput, True)
             if animation["animation_name"] == "blinkrng_solid":
                 animations.blinkrng(np, config, index, strip["animation_data"], globals.compressedOutput, True)
+            if animation["animation_name"] == "onoff":
+                animations.onoff(np, config, index, strip["animation_data"], globals.compressedOutput, True)
             if animation["animation_name"] == "solid":
                 animations.solid_color(np, config, index, strip["animation_data"], globals.compressedOutput)
 
