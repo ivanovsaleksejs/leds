@@ -57,7 +57,6 @@ app.get('/setsequence', (req, res) => {
  */
 const setSequence = (sequence) =>
 {
-  console.log(sequence)
   redisClient.hgetall("devices", (err, devices) => {
     if (devices) {
       Object.keys(devices).forEach((item) => {
