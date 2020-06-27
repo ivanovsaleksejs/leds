@@ -13,6 +13,7 @@
     "react-dom": "^16.8.6",
     "react-scripts": "3.0.1",
     "redis": "^2.8.0",
+    "regenerator-runtime": "^0.13.5",
     "request": "^2.88.0",
     "serialport": "^9.0.0",
     "usb": "^1.6.3"

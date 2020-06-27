@@ -1,21 +1,15 @@
-const remoteButtons = {
-  "modes": {
-    7: "ON",
-    135: "OFF"
-  },
-  "commands": {
-    5: "init",
-    6: "end"
-  }
-}
+import { setSequence } from './sequences.js'
+
+import config from './config.json'
 
 /*
  * Initializes remote controller and adds events for buttons
  */
-const remoteControllerInit = (usb) =>
+const remoteControllerInit = (usb, state) =>
 {
   let remote = false
   remote = usb.findByIds(6790, 29987) //TODO: move to config or some smarter way
+  //remote = usb.findByIds(6790, 29987) //TODO: move to config or some smarter way
   if (typeof remote == "undefined") {
     return
   }
@@ -30,14 +24,14 @@ const remoteControllerInit = (usb) =>
 
   deviceInterface.claim()
   deviceInterface.endpoints[0].startPoll(1,8)
-  deviceInterface.endpoints[0].on("data", processRemoteButtons)
-  deviceInterface.endpoints[0].on("error", _=>{}) // Need not to do anything when device is detached as we rerun init once attached back
+  deviceInterface.endpoints[0].on("data", processRemoteButtons.bind(null, state))
+  deviceInterface.endpoints[0].on("error", _ => {}) // Need not to do anything when device is detached as we rerun init once attached back
 }
 
 /*
  * Processes remote controller buttons
  */
-const processRemoteButtons = (dataBuf, state) =>
+const processRemoteButtons = (state, dataBuf) =>
 {
   let dataArr = Array.prototype.slice.call(new Uint8Array(dataBuf, 0, 8)) // convert buffer to array
   let pressedButton = [dataArr[0], dataArr[3]]
@@ -49,12 +43,12 @@ const processRemoteButtons = (dataBuf, state) =>
     }
 
     state.prevButton = pressedButton
-    let [mode, command] = [remoteButtons.modes[pressedButton[0]], remoteButtons.commands[pressedButton[1]]]
+    let [mode, command] = [config.remoteButtons.modes[pressedButton[0]], config.remoteButtons.commands[pressedButton[1]]]
     if (mode == "OFF" || typeof command == "undefined") {
-      setSequence("process")
+      setSequence(state, "process")
     }
     else {
-      setSequence(command)
+      setSequence(state, command)
     }
 
     state.buttonTimeout = setTimeout(_=>{state.prevButton = false}, 1000)
