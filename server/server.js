@@ -30,7 +30,7 @@ const process = async () => {
   let a = new Date()
   while (true) {
     let start = a.getTime()		
-    setTimeout(_ => {processSequences(state)}, 1)
+    processSequences(state)
     a = new Date()
     let end = a.getTime()
     let diff = end - start
@@ -84,6 +84,8 @@ usb.on('attach', remoteControllerInit.bind(null, usb, state))
 usb.on('detach', _=>{})
 
 remoteControllerInit(usb, state)
+
+setSequence(state, config.defaultSequence)
 
 process()
 

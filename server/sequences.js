@@ -50,6 +50,10 @@ const setSequence = (state, sequence) =>
         sequenceName: sequence,
         sequenceData: state.sequences[device][sequence]
       }
+      for (let zone in state.currentSequences[device].sequenceData) {
+        state.currentSequences[device].sequenceData[zone].animationNumber = 0
+        state.currentSequences[device].sequenceData[zone].step = 0
+      }
     }
     console.log(state.currentSequences)
   }
@@ -81,33 +85,79 @@ const processSequences = (state) => {
   let output = new Uint8Array(0)
 
   for (let device in state.currentSequences) {
-    console.log(state.currentSequences[device])
 
     let deviceBuffer = new Uint8Array(0)
     for (let zone in state.currentSequences[device].sequenceData) {
 
       let zoneData = state.currentSequences[device].sequenceData[zone]
 
-      state.currentSequences[device].sequenceData[zone].step++
-
-      if (state.currentSequences[device].sequenceData[zone].step >= zoneData.animations[zoneData.animationNumber].frameCount) {
-        state.currentSequences[device].sequenceData[zone].step = 0
-        if (zoneData.animationNumber < zoneData.animations.length - 1) {
-          state.currentSequences[device].sequenceData[zone].animationNumber++
+      if (typeof zoneData.animations[zoneData.animationNumber].animation_data.direction !== "undefined") {
+        if (zoneData.animations[zoneData.animationNumber].animation_data.direction == 0) {
+          state.currentSequences[device].sequenceData[zone].step++
+          if (state.currentSequences[device].sequenceData[zone].step >= zoneData.animations[zoneData.animationNumber].animation_data.frameCount) {
+            if (typeof zoneData.animations[zoneData.animationNumber].animation_data.onetime == "undefined") {
+              zoneData.animations[zoneData.animationNumber].animation_data.direction = 1
+              state.currentSequences[device].sequenceData[zone].step--
+            }
+            else {
+              if (zoneData.animationNumber < zoneData.animations.length - 1) {
+                state.currentSequences[device].sequenceData[zone].animationNumber++
+              }
+            }
+          }
+        }
+        else {
+          state.currentSequences[device].sequenceData[zone].step--
+          if (state.currentSequences[device].sequenceData[zone].step <= 0) {
+            if (typeof zoneData.animations[zoneData.animationNumber].animation_data.onetime == "undefined") {
+              zoneData.animations[zoneData.animationNumber].animation_data.direction = 0
+            }
+            else {
+              if (zoneData.animationNumber < zoneData.animations.length - 1) {
+                state.currentSequences[device].sequenceData[zone].animationNumber++
+              }
+            }
+          }
         }
       }
-      if (typeof zoneData.animations[zoneData.animationNumber][zoneData.step] !== "undefined") {
-        deviceBuffer = LEDSerialExpander.mergeArrays(deviceBuffer, zoneData.animations[zoneData.animationNumber][zoneData.step])
+      else {
+        state.currentSequences[device].sequenceData[zone].step++
+        if (state.currentSequences[device].sequenceData[zone].step >= zoneData.animations[zoneData.animationNumber].animation_data.frameCount) {
+          state.currentSequences[device].sequenceData[zone].step = 0
+          if (zoneData.animationNumber < zoneData.animations.length - 1) {
+            state.currentSequences[device].sequenceData[zone].animationNumber++
+          }
+        }
+      }
+      zoneData.step = state.currentSequences[device].sequenceData[zone].step
+
+      if (false && typeof zoneData.animations[zoneData.animationNumber].animation_data.time !== "undefined") {
+        let d = new Date()
+        if (typeof zoneData.animations[zoneData.animationNumber].animation_data.startTime == "undefined") {
+          state.currentSequences[device].sequenceData[zone].animations[zoneData.animationNumber].animation_data.startTime = d.getTime()
+        }
+        if (d.getTime() - zoneData.animations[zoneData.animationNumber].animation_data.startTime >= zoneData.animations[zoneData.animationNumber].animation_data.time) {
+          console.log(d.getTime(), zoneData.animations[zoneData.animationNumber].animation_data.startTime, zoneData.animations[zoneData.animationNumber].animation_data.time)
+          console.log(d.getTime() - zoneData.animations[zoneData.animationNumber].animation_data.startTime)
+          if (zoneData.animationNumber < zoneData.animations.length - 1) {
+            state.currentSequences[device].sequenceData[zone].animationNumber++
+            state.currentSequences[device].sequenceData[zone].step = 0
+          }
+        }
+      }
+
+      if (typeof zoneData.animations[zoneData.animationNumber].animation_data.buffer[zoneData.step] !== "undefined") {
+        deviceBuffer = LEDSerialExpander.mergeArrays(deviceBuffer, zoneData.animations[zoneData.animationNumber].animation_data.buffer[zoneData.step])
       }
     }
-    let header = LEDSerialExpander.setupHeader(device, deviceBuffer.length)
+    let header = LEDSerialExpander.setupHeader(config.uart_devices[device].channel, parseInt(deviceBuffer.length / config.colorsPerPixel))
     deviceBuffer = LEDSerialExpander.mergeArrays(header, deviceBuffer)
     deviceBuffer = LEDSerialExpander.mergeArrays(deviceBuffer, LEDSerialExpander.crcsum(deviceBuffer))
 
     output = LEDSerialExpander.mergeArrays(output, deviceBuffer)
   }
   output = LEDSerialExpander.mergeArrays(output, LEDSerialExpander.drawall)
-  state.serialport.write(output)
+  setTimeout(_ => {state.serialport.write(output)}, 1)
 }
 
 export { setSequence, processSequences }
