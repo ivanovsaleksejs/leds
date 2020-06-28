@@ -50,7 +50,57 @@ const blink = (zone, animation) => {
 
 const flicker = (zone,  animation) => {
 
-    return solid(zone, animation)
+    animation.animation_data.buffer = []
+
+    if (typeof animation.animation_data.flickerAll !== "undefined") {
+        let flicks = parseInt(Math.random() * 7) + 3
+        animation.animation_data.frameCount = flicks * 2 + 1
+        for (let f =  0; f < animation.animation_data.frameCount; f++) {
+            animation.animation_data.buffer[f] = new Uint8Array(zone.animation_data.zoneLength * zone.animation_data.stripLength * config.colorsPerPixel)
+            for (let c in animation.animation_data.flickerColor) {
+                let color = f % 2 ? animation.animation_data.flickerColor[config.colorOrder[c]] : 0
+                animation.animation_data.buffer[f] = animation.animation_data.buffer[f].map((x, i) => i % config.colorsPerPixel == c ? color : x)
+            }
+        }
+    }
+    else {
+        let flicksArray = new Array(zone.animation_data.zoneLength).fill(0).map(_ => parseInt(Math.random() * 7) + 3)
+        let lamps = [...Array(zone.animation_data.zoneLength).keys()].sort(_ => Math.random() - 0.5)
+        let finishedLamps = []
+        animation.animation_data.frameCount = 0
+        for (let flicks in flicksArray) {
+            let flickCount = flicksArray[flicks] * 2 + 1
+            let flick = 0
+            let currentLamp = lamps.shift()
+
+
+            for (let f = animation.animation_data.frameCount; f <= animation.animation_data.frameCount + flickCount; f++) {
+                animation.animation_data.buffer[f] = new Uint8Array(zone.animation_data.zoneLength * zone.animation_data.stripLength * config.colorsPerPixel)
+
+                for (let c in animation.animation_data.flickerColor) {
+                    let color = f % 2 ? animation.animation_data.flickerColor[config.colorOrder[c]] : 0
+                    let oldColor = animation.animation_data.flickerStartColor[config.colorOrder[c]]
+                    let newColor = animation.animation_data.flickerEndColor[config.colorOrder[c]]
+                    animation.animation_data.buffer[f] = animation.animation_data.buffer[f].map((x, i) => {
+                        let lampNr = parseInt(i / (zone.animation_data.stripLength * config.colorsPerPixel))
+                        if (lampNr == currentLamp) {
+                            return i % config.colorsPerPixel == c ? color : x
+                        }
+                        else if (lamps.indexOf(lampNr) !== -1) {
+                            return i % config.colorsPerPixel == c ? oldColor : x
+                        }
+                        else {
+                            return i % config.colorsPerPixel == c ? newColor : x
+                        }
+                    })
+                }
+            }
+            finishedLamps.push(currentLamp)
+            animation.animation_data.frameCount += flickCount
+        }
+
+    }
+    return animation
 }
 
 const solid = (zone, animation) => {

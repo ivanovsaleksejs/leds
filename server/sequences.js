@@ -45,7 +45,6 @@ const setSequence = (state, sequence) =>
         if (typeof config.sequences[sequence][device] !== "undefined") {
           state.sequences[device][sequence] = prepareSequence(config.uart_devices[device], config.sequences[sequence][device])
         }
-      }
       state.currentSequences[device] = {
         sequenceName: sequence,
         sequenceData: state.sequences[device][sequence]
@@ -55,7 +54,6 @@ const setSequence = (state, sequence) =>
         state.currentSequences[device].sequenceData[zone].step = 0
       }
     }
-    console.log(state.currentSequences)
   }
 }
 
@@ -137,8 +135,6 @@ const processSequences = (state) => {
           state.currentSequences[device].sequenceData[zone].animations[zoneData.animationNumber].animation_data.startTime = d.getTime()
         }
         if (d.getTime() - zoneData.animations[zoneData.animationNumber].animation_data.startTime >= zoneData.animations[zoneData.animationNumber].animation_data.time) {
-          console.log(d.getTime(), zoneData.animations[zoneData.animationNumber].animation_data.startTime, zoneData.animations[zoneData.animationNumber].animation_data.time)
-          console.log(d.getTime() - zoneData.animations[zoneData.animationNumber].animation_data.startTime)
           if (zoneData.animationNumber < zoneData.animations.length - 1) {
             state.currentSequences[device].sequenceData[zone].animationNumber++
             state.currentSequences[device].sequenceData[zone].step = 0

@@ -71,55 +71,60 @@ headers[1][8] = 88
 
 
 const doAnimation = async () => {
-const buffer1 = new Uint8Array(660*3)
-for (let i = 0; i < buffer1.length; i++) {
-    buffer1[i] = 0x7F
-}
-const buffer2 = new Uint8Array(660*3)
-for (let i = 0; i < buffer2.length; i++) {
-    buffer2[i] = 0x00
-}
-const buffer3 = new Uint8Array(600*3)
-for (let i = 0; i < buffer3.length; i++) {
-    buffer3[i] = 0x7F
-}
-const buffer4 = new Uint8Array(600*3)
-for (let i = 0; i < buffer4.length; i++) {
-    buffer4[i] = 0x00
-}
-const data1 = mergeArrays(headers[0], buffer1)
-const send1 = mergeArrays(data1, crcsum(data1))
-const data2 = mergeArrays(headers[0], buffer2)
-const send2 = mergeArrays(data2, crcsum(data2))
-const data3 = mergeArrays(headers[1], buffer3)
-const send3 = mergeArrays(data3, crcsum(data3))
-const data4 = mergeArrays(headers[1], buffer4)
-const send4 = mergeArrays(data4, crcsum(data4))
+	const buffer1 = new Uint8Array(660*3)
+	for (let i = 0; i < buffer1.length; i++) {
+	    if (i % 3 == 1) {
+		buffer1[i] = 0x7F
+	    }
+	}
+	const buffer2 = new Uint8Array(660*3)
+	for (let i = 0; i < buffer2.length; i++) {
+	    buffer2[i] = 0x00
+	}
+	const buffer3 = new Uint8Array(600*3)
+	for (let i = 0; i < buffer3.length; i++) {
+	    if (i % 3 == 1) {
+		buffer3[i] = 112
+	    }
+	}
+	const buffer4 = new Uint8Array(600*3)
+	for (let i = 0; i < buffer4.length; i++) {
+	    buffer4[i] = 0x00
+	}
+	const data1 = mergeArrays(headers[0], buffer1)
+	const send1 = mergeArrays(data1, crcsum(data1))
+	const data2 = mergeArrays(headers[0], buffer2)
+	const send2 = mergeArrays(data2, crcsum(data2))
+	const data3 = mergeArrays(headers[1], buffer3)
+	const send3 = mergeArrays(data3, crcsum(data3))
+	const data4 = mergeArrays(headers[1], buffer4)
+	const send4 = mergeArrays(data4, crcsum(data4))
 
-let batch1 = mergeArrays(send1, send3)
-let batch2 = mergeArrays(send2, send4)
+	let batch1 = mergeArrays(send1, send3)
+	let batch2 = mergeArrays(send2, send4)
 
-drawall = mergeArrays(drawall, crcsum(drawall))
+	drawall = mergeArrays(drawall, crcsum(drawall))
+        console.log(drawall)
 
-batch1 = mergeArrays(batch1, drawall)
-batch2 = mergeArrays(batch2, drawall)
+	batch1 = mergeArrays(batch1, drawall)
+	batch2 = mergeArrays(batch2, drawall)
 
-k=0
-let a = new Date()
-let start = 0
-let end = 0
-let diff = 0
-while (true) {
-	start = a.getTime()		
-	setTimeout((data => _ => {port.write(data)})(k%2 == 0 ? batch1 : batch2), 1)
+	k=0
+	let a = new Date()
+	let start = 0
+	let end = 0
+	let diff = 0
+	while (true) {
+		start = a.getTime()		
+		setTimeout((data => _ => {port.write(data)})(k%2 == 0 ? batch1 : batch2), 1)
 
-	k++
-	a = new Date()
-	end = a.getTime()
-	diff = end - start
-	await sleep(Math.min(diff, 30))
+		k++
+		a = new Date()
+		end = a.getTime()
+		diff = end - start
+		await sleep(Math.min(diff, 30))
 
-}
+	}
 }
 
 doAnimation()
