@@ -1,5 +1,7 @@
 import config from './config.json'
 
+const request = require('request')
+
 const animations = require('./animations')
 
 const LEDSerialExpander = require('./LEDSerialExpander.js')
@@ -45,6 +47,7 @@ const setSequence = (state, sequence) =>
         if (typeof config.sequences[sequence][device] !== "undefined") {
           state.sequences[device][sequence] = prepareSequence(config.uart_devices[device], config.sequences[sequence][device])
         }
+      }
       state.currentSequences[device] = {
         sequenceName: sequence,
         sequenceData: state.sequences[device][sequence]
