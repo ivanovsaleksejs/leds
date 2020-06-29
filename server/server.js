@@ -11,7 +11,7 @@ import config from './config.json'
 
 import { remoteControllerInit, processRemoteButtons } from './remotecontroller.js'
 
-import { setSequence, processSequences } from './sequences.js'
+import { setSequence, processSequences, cacheSequences } from './sequences.js'
 
 const state = {
   prevButton: false,
@@ -82,6 +82,8 @@ const server = app.listen(8081, () => {
 /* REMOTE CONTROLLER INIT */
 usb.on('attach', remoteControllerInit.bind(null, usb, state))
 usb.on('detach', _=>{})
+
+cacheSequences(state)
 
 remoteControllerInit(usb, state)
 
