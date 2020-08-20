@@ -1,4 +1,4 @@
-This project aims to control via WiFi several ESP32 devices with LED strips connected to each, using Raspberry Pi as a controller and host for node server and react based UI. It can switch LED strips on and off, change animations etc, all from your phone or PC or remote controller.
+This project aims to control ws2812b LED strips via UART port using simap/pixelblaze_output_expander or/and via WiFi connecting to several ESP32 devices with LED strips connected to each, using Raspberry Pi as a controller and host for node server and react based UI. It can switch LED strips on and off, change animations etc, all from your phone or PC or remote controller.
 
 ## Installation
 
@@ -25,9 +25,15 @@ You can use screen to check if everything works:
 
 If you see a repl prompt then ESP32 is connected to WiFi and discovered your Raspberry Pi by local domain.
 
+### Output expander
+
+The expander that you can purchase on [tindie](https://www.tindie.com/products/electromage/electromage-serial-to-8x-ws2812apa102-driver/) is ready to use. However, instead of 2000000 baud rate you need to set it to 2304000 to make it work with RPi UART. Expander allows you to control more output channels (up to 64 on one UART pin) thus allowing you to get around the timing limitation of ws2812b.
+ 
 ### Wiring
 
 Connect LED strip to your ESP32. Make sure you have connected signal wire to the right pin (see config.json). Also make sure you have connected ESP32 ground to LED strip ground - otherwise you may face unpredictable behavior. Make sure you have powered your setup well - 5V LEDs like ws2812b require 25mA each when provided a white (0xFFFFFF) color, so, if your strip has 60 LEDs it may require up to 1.6A. It's better to use separate PSU (5V 2A or better) for each strip in this case.
+
+Connect Data pin of the expander to RPi TX pin (usually 8th pin). Connect 5V to expander. Make sure you link grounds of strips, expander and RPi.
 
 ### Raspberry Pi
 
@@ -52,7 +58,7 @@ to install all dependencies.
 ### Server
 You can start server by running
 
-`yarn server`
+`sudo yarn server`
 
 Or you can register it as systemd item. Create leds.service from example. Create a symlink to it in /etc/systemd/system and enable it with
 
