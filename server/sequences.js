@@ -48,13 +48,40 @@ const setSequence = (state, sequence) =>
           state.sequences[device][sequence] = prepareSequence(config.uart_devices[device], config.sequences[sequence][device])
         }
       }
-      state.currentSequences[device] = {
-        sequenceName: sequence,
-        sequenceData: state.sequences[device][sequence]
+      let isToggle = false
+      let newSequence = ""
+      if (typeof state.currentSequences[device] !== "undefined") {
+        for (let zone in state.currentSequences[device].sequenceData) {
+          if (typeof state.currentSequences[device].sequenceData[zone].toggle !== "undefined") {
+            for (let newzone in state.sequences[device][sequence]) {
+              if (typeof state.sequences[device][sequence][zone].toggle !== "undefined") {
+                isToggle = true
+                newSequence = state.sequences[device][sequence][zone].nextAnimation
+              }
+            }
+            break
+          }
+        }
       }
-      for (let zone in state.currentSequences[device].sequenceData) {
-        state.currentSequences[device].sequenceData[zone].animationNumber = 0
-        state.currentSequences[device].sequenceData[zone].step = 0
+      if (isToggle) {
+        state.currentSequences[device] = {
+          sequenceName: newSequence,
+          sequenceData: state.sequences[device][newSequence]
+        }
+        for (let zone in state.currentSequences[device].sequenceData) {
+          state.currentSequences[device].sequenceData[zone].animationNumber = 0
+          state.currentSequences[device].sequenceData[zone].step = 0
+        }
+      }
+      else {
+        state.currentSequences[device] = {
+          sequenceName: sequence,
+          sequenceData: state.sequences[device][sequence]
+        }
+        for (let zone in state.currentSequences[device].sequenceData) {
+          state.currentSequences[device].sequenceData[zone].animationNumber = 0
+          state.currentSequences[device].sequenceData[zone].step = 0
+        }
       }
     }
   }
@@ -84,7 +111,14 @@ const prepareSequence = (device, sequence) => {
     ret[zone] = {
       animationNumber: 0,
       step: 0,
-      animations: []
+      animations: [],
+    }
+    let props = Object.entries(sequence[zone].animation_data)
+    for (let prop in props) {
+
+      if (typeof props[prop][1] !== "object") {
+        ret[zone][props[prop][0]] = props[prop][1]
+      }
     }
     for (let index in sequence[zone].animation_data.animations) {
 
@@ -154,7 +188,7 @@ const processSequences = (state) => {
       }
       else {
         state.currentSequences[device].sequenceData[zone].step++
-        if (state.currentSequences[device].sequenceData[zone].step >= zoneData.animations[zoneData.animationNumber].animation_data.frameCount 
+        if (state.currentSequences[device].sequenceData[zone].step >= zoneData.animations[zoneData.animationNumber].animation_data.frameCount
           && typeof zoneData.animations[zoneData.animationNumber].animation_data.time == "undefined") {
           state.currentSequences[device].sequenceData[zone].step = 0
           if (zoneData.animationNumber < zoneData.animations.length - 1) {

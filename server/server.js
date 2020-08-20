@@ -18,6 +18,7 @@ const state = {
   buttonTimeout: false,
   redisClient: redis.createClient(6379),
   sequences: {},
+  previousSequences: {},
   currentSequences: {},
   serialport: new SerialPort('/dev/ttyS0', {
       baudRate: config.uart_baudrate
